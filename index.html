@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Boosting Reasoning in Large Multimodal Models with Activation Replay</title>
+    
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V3D20SW4N4"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-V3D20SW4N4');
+    </script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            line-height: 1.7;
+            color: #333;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header Section */
+        .header-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 60px 20px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .title {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            line-height: 1.3;
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.95;
+            margin-top: 10px;
+            font-weight: 300;
+        }
+
+        /* Author Section */
+        .author-section {
+            background: white;
+            padding: 40px 20px;
+            margin-top: -20px;
+            border-radius: 20px;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.08);
+        }
+
+        .author-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .author-item {
+            text-align: center;
+            padding: 15px;
+            transition: transform 0.3s ease;
+        }
+
+        .author-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .author-name {
+            font-weight: 600;
+            font-size: 1.1em;
+            color: #667eea;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .author-name:hover {
+            color: #764ba2;
+        }
+
+        .author-affiliation {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        /* Links Section */
+        .links-section {
+            text-align: center;
+            padding: 30px 0;
+        }
+
+        .paper-link {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1em;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .paper-link:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.6);
+            color: white;
+        }
+
+        .paper-icon {
+            margin-right: 8px;
+        }
+
+        /* Content Section */
+        .content-section {
+            background: white;
+            padding: 50px 40px;
+            margin: 40px auto;
+            border-radius: 20px;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.08);
+        }
+
+        .section-title {
+            font-size: 2em;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .text-content {
+            font-size: 1.05em;
+            line-height: 1.8;
+            color: #444;
+            text-align: justify;
+        }
+
+        /* Image Container */
+        .image-container {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        .responsive-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        /* Citation Box */
+        .citation-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 25px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+
+        /* Footer */
+        .footer-section {
+            background: white;
+            padding: 40px;
+            margin: 40px auto;
+            border-radius: 20px;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.08);
+            color: #666;
+        }
+
+        .footer-section a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .footer-section a:hover {
+            text-decoration: underline;
+        }
+
+        /* Divider */
+        .divider {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #667eea, transparent);
+            border: none;
+            margin: 60px auto;
+            max-width: 80%;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .title {
+                font-size: 1.8em;
+            }
+
+            .author-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .content-section {
+                padding: 30px 20px;
+            }
+
+            .section-title {
+                font-size: 1.5em;
+            }
+        }
+
+        /* Animation */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .content-section {
+            animation: fadeInUp 0.6s ease-out;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <div class="header-section">
+        <div class="container">
+            <h1 class="title">
+                Boosting Reasoning in Large Multimodal Models<br>with Activation Replay
+            </h1>
+            <p class="subtitle">ArXiv 2025</p>
+        </div>
+    </div>
+
+    <!-- Authors -->
+    <div class="container">
+        <div class="author-section">
+            <div class="author-grid">
+                <div class="author-item">
+                    <a href="https://scholar.google.com/citations?user=uOAYTXoAAAAJ&hl=en&oi=ao" class="author-name">Yun Xing</a>
+                    <div class="author-affiliation">Nanyang Technological University</div>
+                </div>
+                <div class="author-item">
+                    <a href="https://scholar.google.com/citations?user=3lMuodUAAAAJ&hl=en&oi=ao" class="author-name">Xiaobin Hu</a>
+                    <div class="author-affiliation">National University of Singapore</div>
+                </div>
+                <div class="author-item">
+                    <a href="https://scholar.google.com/citations?user=gUJWww0AAAAJ&hl=en&oi=ao" class="author-name">Qingdong He</a>
+                    <div class="author-affiliation">Tencent Youtu Lab</div>
+                </div>
+                <div class="author-item">
+                    <a href="https://scholar.google.com/citations?user=2hA4X9wAAAAJ&hl=en" class="author-name">Jiangning Zhang</a>
+                    <div class="author-affiliation">Zhejiang University</div>
+                </div>
+                <div class="author-item">
+                    <a href="https://scholar.google.com/citations?hl=en&user=DNuiPHwAAAAJ&view_op=list_works" class="author-name">Shuicheng Yan</a>
+                    <div class="author-affiliation">National University of Singapore</div>
+                </div>
+                <div class="author-item">
+                    <a href="https://scholar.google.com/citations?hl=en&user=uYmK-A0AAAAJ&view_op=list_works" class="author-name">Shijian Lu</a>
+                    <div class="author-affiliation">Nanyang Technological University</div>
+                </div>
+                <div class="author-item">
+                    <a href="https://scholar.google.com/citations?user=f3_FP8AAAAAJ&hl=en&oi=ao" class="author-name">Yu-Gang Jiang</a>
+                    <div class="author-affiliation">Fudan University</div>
+                </div>
+            </div>
+
+            <!-- Paper Link -->
+            <div class="links-section">
+                <a href="https://arxiv.org/pdf/2511.19972" class="paper-link">
+                    <span class="paper-icon">📄</span> Read Paper
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Abstract -->
+    <div class="container">
+        <div class="content-section">
+            <h2 class="section-title">Abstract</h2>
+            <p class="text-content">
+                Recently, Reinforcement Learning with Verifiable Rewards (RLVR) has emerged as an effective approach to incentivizing reasoning capability in Large Multimodal Models (LMMs), while the underlying mechanisms behind this post-training paradigm are poorly understood. We begin by exploring how input activations are affected by RLVR through the perspective of logit lens. Our systematic investigations across multiple post-trained LMMs suggest that RLVR shifts low-entropy activations unexpectedly, while high-entropy ones are less affected. We further demonstrate that such phenomena are associated with LMM reasoning by controlled experiments, suggesting a potentially beneficial role of modulating low-entropy activations.
+            </p>
+            <p class="text-content" style="margin-top: 15px;">
+                To this end, we propose Activation Replay, a novel simple yet effective training-free approach that boosts multimodal reasoning of post-trained LMMs without requiring expensive policy optimization. Our design involves manipulation of visual tokens at test time, replaying low-entropy activations from the input context of base LMMs to regulating the RLVR counterparts. Activation Replay triggers better reasoning across diverse scenarios, including mathematics, o3-like visual agents, and video reasoning. We further show that Activation Replay boosts Pass@K and mitigates narrower reasoning coverage of RLVR. Our design is compared against alternative choices, such as replaying high-entropy activations instead of low-entropy ones, or direct cross-model intervention instead of manipulating input tokens, demonstrating the superiority of our implementation. Codes will be made publicly available.
+            </p>
+            <div class="image-container">
+                <img src="./image/xy_repl_fig1.png" class="responsive-image" alt="Method Overview">
+            </div>
+        </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- How Input Activations are Affected -->
+    <div class="container">
+        <div class="content-section">
+            <h2 class="section-title">How Input Activations are Affected</h2>
+            <p class="text-content">
+                From left to right in subplots are low to high base LMM entropy. The shifts of KL divergence is normalized layerwise for illustration purpose. Brighter color suggests relatively more severe shifts on KL divergence. 
+            </p>
+            <div class="image-container">
+                <img src="image/xy_repl_fig3.png" class="responsive-image" alt="Existing Benchmark 1">
+            </div>
+        </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Perturbation Study -->
+    <div class="container">
+        <div class="content-section">
+            <h2 class="section-title">Perturbation Study</h2>
+            <p class="text-content">
+                We synthesize variations over input activations by interrupting inputs
+with random noises. We measure perplexity from reasoning
+LMNs over this response, while lower perplexity indicates
+higher probability. Four cases from different math domains
+are evaluated. These cases suggest that when the KL divergence of low-entropy activations shifts less drastically
+from the base (left in subplots of Figure), the perplexity of
+the correct responses decreases and that of the incorrect responses increases, encouraging the LMMs to correct output.
+            </p>
+            <div class="image-container">
+                <img src="image/xy_repl_fig4.png" class="responsive-image" alt="Statistics">
+            </div>
+            <div class="image-container">
+                <img src="image/xy_repl_appendix_fig4.png" class="responsive-image" alt="Statistics">
+            </div>
+        </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Intervention Study -->
+    <div class="container">
+        <div class="content-section">
+            <h2 class="section-title">Intervention Study</h2>
+            <p class="text-content">
+                To further dissect the role of low- and high-entropy activations from base LMMs, we perform a striaghtforward
+cross-model intervention study, forcing RLVR post-trained
+LMMs to reason over a combination of base and RLVR activations. We try two combinations, low-entropy activations
+from base and high from RLVR; high-entropy activations
+from base and low- from RLVR. 
+            </p>
+            <div class="image-container">
+                <img src="image/xy_iv_study.PNG" class="responsive-image" alt="Evaluation Results">
+            </div>
+            
+        </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Our Approach -->
+    <div class="container">
+        <div class="content-section">
+            <h2 class="section-title">Overview of Activation Replay</h2>
+            <p class="text-content">
+                Activation Replay starts with feeding the multimodal inputs to base LMMs and obtain low-
+entropy input activations. For inputs to the RLVR LMM, our approach first adds zero-initialized learnable tokens to visual tokens. Then
+we manipulate these learnable tokens to minimize the token-level KL divergence between low-entropy activations from base LMMs and
+those from RLVR post-trained counterparts.
+            </p>
+            <div class="image-container">
+                <img src="image/xy_repl_fig5_new.png" class="responsive-image" alt="Fine-tuning Results">
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Results -->
+    <div class="container">
+        <div class="content-section">
+            <h2 class="section-title">Main Results</h2>
+            <div class="image-container">
+                <img src="image/xy_main_results.PNG" class="responsive-image" alt="Fine-tuning Results">
+            </div>
+        </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Passk Results -->
+    <div class="container">
+        <div class="content-section">
+            <h2 class="section-title">Pass@K Results</h2>
+            <div class="image-container">
+                <img src="image/xy_repl_fig6.png" style="height: 300px;" class="responsive-image" alt="Fine-tuning Results">
+            </div>
+        </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Qualitative Cases -->
+    <div class="container">
+        <div class="content-section">
+            <h2 class="section-title">Qualitative Cases</h2>
+            <div class="image-container">
+                <img src="image/xy_repl_fig7.png" class="responsive-image" alt="Fine-tuning Results">
+            </div>
+            <div class="image-container">
+                <img src="image/xy_replay_appendix_case1.png" class="responsive-image" alt="Fine-tuning Results">
+            </div>
+            <div class="image-container">
+                <img src="image/xy_replay_appendix_case2.png" class="responsive-image" alt="Fine-tuning Results">
+            </div>
+            <div class="image-container">
+                <img src="image/appendix_agent_case3.png" class="responsive-image" alt="Fine-tuning Results">
+            </div>
+        </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Citation -->
+    <div class="container">
+        <div class="content-section">
+            <h2 class="section-title">Citation</h2>
+            <p class="text-content">Consider citing us if you find this project is helpful:</p>
+            <div class="citation-box">@article{xing2025boosting,</p>
+            <p></p>title={Boosting Reasoning in Large Multimodal Models via Activation Replay},</p>
+  author={Yun Xing and Xiaobin Hu and Qingdong He and Jiangning Zhang and Shuicheng Yan and Shijian Lu and Yu-Gang Jiang},</p>
+  journal={arXiv preprint arXiv:2511.19972},</p>
+  year={2025}</p>
+}</div>
+        </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Acknowledgements -->
+    <div class="container">
+        <div class="footer-section">
+            <h2 class="section-title">Acknowledgements</h2>
+            <p class="text-content">
+                This webpage integrates components from  
+                <a href="https://richzhang.github.io/webpage-template/">Richard Zhang</a>.
+                We sincerely thank the authors for their great work and websites.
+            </p>
+        </div>
+    </div>
+
+    <div style="height: 50px;"></div>
+
+</body>
+
+</html>
